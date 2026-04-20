@@ -108,6 +108,11 @@ export class TransactionService {
     private async completeTransaction(
         transaction: TransactionDocument,
     ): Promise<TransactionDocument> {
+        // Defensive idempotency: commission zaten hesaplanmışsa tekrar hesaplama
+        if (transaction.commission !== null) {
+            return transaction;
+        }
+
         const session = await this.connection.startSession();
 
         try {
