@@ -7,6 +7,13 @@ import {
 } from '../transaction/schemas/transaction.schema.js';
 import { TransactionStage } from '../common/constants/stage-transitions.js';
 
+interface TopAgentResult {
+    agentId: string;
+    agentName: string;
+    totalEarnings: number;
+    transactionCount: number;
+}
+
 @Injectable()
 export class DashboardService {
     constructor(
@@ -94,7 +101,7 @@ export class DashboardService {
             .exec();
     }
 
-    private async getTopAgents(): Promise<any[]> {
+    private async getTopAgents(): Promise<TopAgentResult[]> {
         return this.transactionModel
             .aggregate([
                 { $match: { stage: TransactionStage.COMPLETED } },
@@ -122,3 +129,4 @@ export class DashboardService {
             .exec();
     }
 }
+
