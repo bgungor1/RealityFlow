@@ -21,7 +21,7 @@
         <DashboardPipeline :transactions="transactionStore.transactions" />
       </section>
 
-      <section class="max-w-4xl">
+      <section>
         <DashboardTopPerformers :agents="dashboardStore.data?.topAgents || []" />
       </section>
     </template>
