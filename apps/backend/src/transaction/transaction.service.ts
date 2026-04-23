@@ -118,12 +118,10 @@ export class TransactionService {
         try {
             session.startTransaction();
 
-            const listingAgent = await this.userService.findById(
-                transaction.listingAgentId.toString(),
-            );
-            const sellingAgent = await this.userService.findById(
-                transaction.sellingAgentId.toString(),
-            );
+            // Populate edilmiş (zaten verisi çekilmiş) objeleri doğrudan kullanıyoruz.
+            // Eskiden burada .toString() yapıldığı için "[object Object]" hatası veriyordu.
+            const listingAgent: any = transaction.listingAgentId;
+            const sellingAgent: any = transaction.sellingAgentId;
 
             const commission = this.commissionService.calculate({
                 totalServiceFee: transaction.totalServiceFee,
@@ -149,12 +147,13 @@ export class TransactionService {
             await session.commitTransaction();
 
             this.logger.log(
-                `Transaction ${transaction._id} completed. Commission calculated.`,
+                `Transaction ${transaction._id} completed. Commission calculated atomically.`,
             );
 
             return this.findById(transaction._id.toString());
         } catch (error) {
             await session.abortTransaction();
+            this.logger.error('Failed to complete transaction, aborted session', error);
             throw error;
         } finally {
             session.endSession();
