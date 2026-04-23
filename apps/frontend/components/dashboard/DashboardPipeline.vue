@@ -3,12 +3,7 @@
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-bold text-surface-900">Active Pipeline</h2>
       <div class="flex gap-1 items-center">
-        <button class="p-2 text-surface-400 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-          </svg>
-        </button>
-        <button class="p-2 text-surface-400 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors">
+        <button class="p-2 text-surface-400 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors" title="Options">
           <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
@@ -16,9 +11,9 @@
       </div>
     </div>
 
-    <div class="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
+    <div class="flex gap-6 overflow-x-auto pb-4 hide-scrollbar w-full">
       <!-- Columns -->
-      <div v-for="column in columns" :key="column.id" class="flex-shrink-0 w-80 flex flex-col">
+      <div v-for="column in columns" :key="column.id" class="flex-1 min-w-[320px] flex flex-col">
         <!-- Column Header -->
         <div class="flex items-center justify-between mb-3 px-1">
           <div class="flex items-center gap-2">
