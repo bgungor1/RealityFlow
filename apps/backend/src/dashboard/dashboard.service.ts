@@ -7,7 +7,7 @@ import {
 } from '../transaction/schemas/transaction.schema.js';
 import { TransactionStage } from '../common/constants/stage-transitions.js';
 
-interface TopAgentResult {
+export interface TopAgentResult {
     agentId: string;
     agentName: string;
     totalEarnings: number;
