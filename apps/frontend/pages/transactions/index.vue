@@ -36,10 +36,9 @@
         <div class="flex gap-2">
           <select v-model="stageFilter" class="px-3 py-2.5 bg-white border border-surface-200 rounded-lg text-sm text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none cursor-pointer">
             <option value="">All Stages</option>
-            <option value="agreement">Agreement</option>
-            <option value="earnest_money">Earnest Money</option>
-            <option value="title_deed">Title Deed</option>
-            <option value="completed">Completed</option>
+            <option v-for="stage in STAGE_ORDER" :key="stage" :value="stage">
+              {{ stage.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') }}
+            </option>
           </select>
         </div>
       </div>
@@ -115,6 +114,7 @@
 
 <script setup lang="ts">
 import { useTransactionStore } from '~/stores/transaction';
+import { TransactionStage, STAGE_ORDER } from '~/constants/transaction';
 
 const transactionStore = useTransactionStore();
 
@@ -155,10 +155,10 @@ const formatCurrency = (value: number) => {
 
 const getStageDotColor = (stage: string) => {
   switch (stage) {
-    case 'agreement': return 'bg-surface-400';
-    case 'earnest_money': return 'bg-warning-400';
-    case 'title_deed': return 'bg-primary-400';
-    case 'completed': return 'bg-success-400';
+    case TransactionStage.AGREEMENT: return 'bg-surface-400';
+    case TransactionStage.EARNEST_MONEY: return 'bg-warning-400';
+    case TransactionStage.TITLE_DEED: return 'bg-primary-400';
+    case TransactionStage.COMPLETED: return 'bg-success-400';
     default: return 'bg-surface-300';
   }
 };

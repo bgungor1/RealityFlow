@@ -113,8 +113,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Transaction } from '~/types';
+
 const props = defineProps<{
-  transaction: any;
+  transaction: Transaction;
 }>();
 
 const commission = computed(() => props.transaction?.commission);
@@ -129,14 +131,7 @@ const sellingShare = computed(() => {
 });
 
 const isSameAgent = computed(() => {
-  return props.transaction?.listingAgentId?._id === props.transaction?.sellingAgentId?._id;
+  // Virtual property üzerinden karşılaştırma (ID'ler string olarak geliyor)
+  return props.transaction?.listingAgentId === props.transaction?.sellingAgentId;
 });
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
-};
 </script>

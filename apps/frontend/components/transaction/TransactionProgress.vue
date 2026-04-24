@@ -30,21 +30,21 @@
             ]"
           >
             <!-- Check Icon for completed -->
-            <svg v-if="isStepCompleted(step.id) && (currentStage !== step.id || step.id === 'completed')" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="isStepCompleted(step.id) && (currentStage !== step.id || step.id === TransactionStage.COMPLETED)" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <!-- Custom Icon for current or pending -->
             <template v-else>
-              <svg v-if="step.id === 'agreement'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="step.id === TransactionStage.AGREEMENT" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <svg v-else-if="step.id === 'earnest_money'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="step.id === TransactionStage.EARNEST_MONEY" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <svg v-else-if="step.id === 'title_deed'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="step.id === TransactionStage.TITLE_DEED" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              <svg v-else-if="step.id === 'completed'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-else-if="step.id === TransactionStage.COMPLETED" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
               </svg>
             </template>
@@ -72,37 +72,39 @@
 </template>
 
 <script setup lang="ts">
+import { TransactionStage, STAGE_ORDER } from '~/constants/transaction';
+import { formatDate } from '~/utils/format';
+import type { StageHistoryEntry } from '~/types';
+
 const props = defineProps<{
   currentStage: string;
-  stageHistory: any[];
+  stageHistory: StageHistoryEntry[];
   createdAt: string;
 }>();
 
-const STAGES = ['agreement', 'earnest_money', 'title_deed', 'completed'];
-
 const steps = [
-  { id: 'agreement', label: 'Agreement' },
-  { id: 'earnest_money', label: 'Earnest Money' },
-  { id: 'title_deed', label: 'Title Deed' },
-  { id: 'completed', label: 'Completed' }
+  { id: TransactionStage.AGREEMENT, label: 'Agreement' },
+  { id: TransactionStage.EARNEST_MONEY, label: 'Earnest Money' },
+  { id: TransactionStage.TITLE_DEED, label: 'Title Deed' },
+  { id: TransactionStage.COMPLETED, label: 'Completed' }
 ];
 
-const currentIndex = computed(() => STAGES.indexOf(props.currentStage));
+const currentIndex = computed(() => STAGE_ORDER.indexOf(props.currentStage as TransactionStage));
 
 const progressPercentage = computed(() => {
   if (currentIndex.value === -1) return 0;
-  if (currentIndex.value === STAGES.length - 1) return 100;
+  if (currentIndex.value === STAGE_ORDER.length - 1) return 100;
   // Calculate width based on number of steps to place the line exactly in the middle of icons
-  return (currentIndex.value / (STAGES.length - 1)) * 100;
+  return (currentIndex.value / (STAGE_ORDER.length - 1)) * 100;
 });
 
 const isStepCompleted = (stepId: string) => {
-  const stepIndex = STAGES.indexOf(stepId);
+  const stepIndex = STAGE_ORDER.indexOf(stepId as TransactionStage);
   return stepIndex <= currentIndex.value;
 };
 
 const getStepDate = (stepId: string) => {
-  if (stepId === 'agreement') {
+  if (stepId === TransactionStage.AGREEMENT) {
     return formatDate(props.createdAt);
   }
   
@@ -112,11 +114,5 @@ const getStepDate = (stepId: string) => {
     return formatDate(historyEntry.changedAt);
   }
   return null;
-};
-
-const formatDate = (dateString: string) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
 };
 </script>

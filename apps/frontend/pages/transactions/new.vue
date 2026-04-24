@@ -50,8 +50,8 @@
               class="w-full px-4 py-3 bg-surface-50 border border-surface-200 rounded-lg focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all appearance-none"
             >
               <option value="" disabled>Select type</option>
-              <option value="sale">Sale</option>
-              <option value="rental">Rental</option>
+              <option :value="PropertyType.SALE">Sale</option>
+              <option :value="PropertyType.RENTAL">Rental</option>
             </select>
           </div>
 
@@ -138,6 +138,7 @@
 
 <script setup lang="ts">
 import { useTransactionStore } from '~/stores/transaction';
+import { PropertyType } from '~/constants/transaction';
 
 const config = useRuntimeConfig();
 const transactionStore = useTransactionStore();
@@ -183,7 +184,7 @@ const handleSubmit = async () => {
   isSubmitting.value = true;
   
   try {
-    await transactionStore.create({
+    const newTx = await transactionStore.create({
       propertyAddress: form.propertyAddress,
       propertyType: form.propertyType,
       totalServiceFee: form.totalServiceFee,
@@ -191,8 +192,8 @@ const handleSubmit = async () => {
       sellingAgentId: form.sellingAgentId
     });
     
-    // Redirect to dashboard on success
-    router.push('/');
+    // Redirect to detail page on success
+    router.push(`/transactions/${newTx._id}`);
   } catch (error: any) {
     errorMsg.value = transactionStore.error || 'An unexpected error occurred while creating the transaction.';
   } finally {
