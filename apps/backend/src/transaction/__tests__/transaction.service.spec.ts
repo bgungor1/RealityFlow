@@ -38,6 +38,8 @@ describe('TransactionService', () => {
             stage: TransactionStage.AGREEMENT,
             listingAgentId: agentAId,
             sellingAgentId: agentBId,
+            listingAgent: mockAgentA,
+            sellingAgent: mockAgentB,
             commission: null,
             stageHistory: [],
             save: jest.fn().mockResolvedValue(undefined),
@@ -300,6 +302,8 @@ describe('TransactionService', () => {
                 stage: TransactionStage.TITLE_DEED,
                 listingAgentId: agentAId,
                 sellingAgentId: agentAId,
+                listingAgent: mockAgentA,
+                sellingAgent: mockAgentA,
             });
 
             mockTransactionModel.findById.mockReturnValue({
