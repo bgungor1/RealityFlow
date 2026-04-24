@@ -30,6 +30,20 @@ async function bootstrap() {
   // Global exception filter — hata mesajları düzgün formatlanır
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  // Swagger Configuration
+  const { SwaggerModule, DocumentBuilder } = await import('@nestjs/swagger');
+  const config = new DocumentBuilder()
+    .setTitle('RealityFlow API')
+    .setDescription('Real estate transaction management system API documentation')
+    .setVersion('1.0')
+    .addTag('transactions')
+    .addTag('dashboard')
+    .addTag('users')
+    .build();
+  
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`🚀 RealityFlow Backend running on http://localhost:${port}`);

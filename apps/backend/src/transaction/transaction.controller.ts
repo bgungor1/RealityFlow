@@ -14,16 +14,22 @@ import { TransitionStageDto } from './dto/transition-stage.dto.js';
 import { TransactionStage } from '../common/constants/stage-transitions.js';
 import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe.js';
 
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('transactions')
 @Controller('api/transactions')
 export class TransactionController {
     constructor(private readonly transactionService: TransactionService) { }
 
     @Post()
+    @ApiOperation({ summary: 'Create a new real estate transaction' })
+    @ApiResponse({ status: 201, description: 'Transaction successfully created.' })
     create(@Body() dto: CreateTransactionDto) {
         return this.transactionService.create(dto);
     }
 
     @Get()
+    @ApiOperation({ summary: 'Get all transactions, optionally filtered by stage' })
     findAll(
         @Query('stage', new ParseEnumPipe(TransactionStage, { optional: true }))
         stage?: TransactionStage,
@@ -32,11 +38,17 @@ export class TransactionController {
     }
 
     @Get(':id')
+    @ApiOperation({ summary: 'Get a specific transaction by its ID' })
+    @ApiResponse({ status: 200, description: 'Returns the transaction details.' })
+    @ApiResponse({ status: 404, description: 'Transaction not found.' })
     findById(@Param('id', ParseMongoIdPipe) id: string) {
         return this.transactionService.findById(id);
     }
 
     @Patch(':id/transition')
+    @ApiOperation({ summary: 'Transition a transaction to the next lifecycle stage' })
+    @ApiResponse({ status: 200, description: 'Stage successfully updated.' })
+    @ApiResponse({ status: 400, description: 'Invalid stage transition.' })
     transitionStage(
         @Param('id', ParseMongoIdPipe) id: string,
         @Body() dto: TransitionStageDto,
