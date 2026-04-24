@@ -5,15 +5,22 @@ import {
     Logger,
 } from '@nestjs/common';
 import { InjectModel, InjectConnection } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose';
+import { Model, Connection, Types } from 'mongoose';
 import { Transaction, TransactionDocument } from './schemas/transaction.schema.js';
 import { CreateTransactionDto } from './dto/create-transaction.dto.js';
 import { CommissionService } from './commission.service.js';
 import { UserService } from '../user/user.service.js';
+import { BusinessException } from '../common/exceptions/business.exception.js';
 import {
     TransactionStage,
     VALID_TRANSITIONS,
 } from '../common/constants/stage-transitions.js';
+
+interface PopulatedAgent {
+    _id: Types.ObjectId;
+    fullName: string;
+    email: string;
+}
 
 @Injectable()
 export class TransactionService {
@@ -28,8 +35,11 @@ export class TransactionService {
         private readonly userService: UserService,
     ) { }
 
+    private isPopulated(agent: any): agent is PopulatedAgent {
+        return agent && typeof agent === 'object' && 'fullName' in agent;
+    }
+
     async create(dto: CreateTransactionDto): Promise<TransactionDocument> {
-        // Agent'ların var olduğunu doğrula
         await this.userService.findById(dto.listingAgentId);
         await this.userService.findById(dto.sellingAgentId);
 
@@ -46,8 +56,8 @@ export class TransactionService {
         const filter = stage ? { stage } : {};
         return this.transactionModel
             .find(filter)
-            .populate('listingAgentId', 'fullName email')
-            .populate('sellingAgentId', 'fullName email')
+            .populate('listingAgent', 'fullName email')
+            .populate('sellingAgent', 'fullName email')
             .sort({ createdAt: -1 })
             .exec();
     }
@@ -55,8 +65,8 @@ export class TransactionService {
     async findById(id: string): Promise<TransactionDocument> {
         const transaction = await this.transactionModel
             .findById(id)
-            .populate('listingAgentId', 'fullName email')
-            .populate('sellingAgentId', 'fullName email')
+            .populate('listingAgent', 'fullName email')
+            .populate('sellingAgent', 'fullName email')
             .exec();
 
         if (!transaction) {
@@ -72,12 +82,10 @@ export class TransactionService {
         const transaction = await this.findById(id);
         const currentStage = transaction.stage;
 
-        // İdempotency: zaten hedef stage'deyse mevcut state'i dön
         if (currentStage === targetStage) {
             return transaction;
         }
 
-        // Config-driven validasyon
         const allowedNext = VALID_TRANSITIONS[currentStage];
         if (!allowedNext || allowedNext !== targetStage) {
             throw new BadRequestException(
@@ -86,12 +94,10 @@ export class TransactionService {
             );
         }
 
-        // Completed stage'e geçişte commission hesapla (MongoDB session ile atomik)
         if (targetStage === TransactionStage.COMPLETED) {
             return this.completeTransaction(transaction);
         }
 
-        // Normal stage geçişi
         transaction.stage = targetStage;
         transaction.stageHistory.push({
             from: currentStage,
@@ -102,13 +108,12 @@ export class TransactionService {
         await transaction.save();
         this.logger.log(`Transaction ${id}: ${currentStage} → ${targetStage}`);
 
-        return this.findById(id);
+        return transaction;
     }
 
     private async completeTransaction(
         transaction: TransactionDocument,
     ): Promise<TransactionDocument> {
-        // Defensive idempotency: commission zaten hesaplanmışsa tekrar hesaplama
         if (transaction.commission !== null) {
             return transaction;
         }
@@ -118,20 +123,24 @@ export class TransactionService {
         try {
             session.startTransaction();
 
-            // Populate edilmiş (zaten verisi çekilmiş) objeleri doğrudan kullanıyoruz.
-            // Eskiden burada .toString() yapıldığı için "[object Object]" hatası veriyordu.
-            const listingAgent: any = transaction.listingAgentId;
-            const sellingAgent: any = transaction.sellingAgentId;
+            if (
+                !this.isPopulated(transaction.listingAgent) ||
+                !this.isPopulated(transaction.sellingAgent)
+            ) {
+                throw new BusinessException(
+                    'Agent data not populated for commission calculation',
+                );
+            }
 
             const commission = this.commissionService.calculate({
                 totalServiceFee: transaction.totalServiceFee,
                 listingAgent: {
-                    id: listingAgent._id.toString(),
-                    fullName: listingAgent.fullName,
+                    id: transaction.listingAgent._id.toString(),
+                    fullName: transaction.listingAgent.fullName,
                 },
                 sellingAgent: {
-                    id: sellingAgent._id.toString(),
-                    fullName: sellingAgent.fullName,
+                    id: transaction.sellingAgent._id.toString(),
+                    fullName: transaction.sellingAgent.fullName,
                 },
             });
 
@@ -150,10 +159,14 @@ export class TransactionService {
                 `Transaction ${transaction._id} completed. Commission calculated atomically.`,
             );
 
-            return this.findById(transaction._id.toString());
+            return transaction;
         } catch (error) {
             await session.abortTransaction();
-            this.logger.error('Failed to complete transaction, aborted session', error);
+            if (error instanceof BusinessException) {
+                this.logger.warn(`Business rule violation: ${error.message}`);
+            } else {
+                this.logger.error('Failed to complete transaction, aborted session', error);
+            }
             throw error;
         } finally {
             session.endSession();

@@ -22,111 +22,97 @@ export class DashboardService {
     ) { }
 
     async getDashboard() {
-        const [
-            totalTransactions,
-            byStage,
-            revenueData,
-            recentTransactions,
-            topAgents,
-        ] = await Promise.all([
-            this.getTotalTransactions(),
-            this.getByStage(),
-            this.getRevenueData(),
+        const [aggregationResult, recentTransactions, allTransactions] = await Promise.all([
+            this.transactionModel
+                .aggregate([
+                    {
+                        $facet: {
+                            totalCount: [{ $count: 'count' }],
+                            byStage: [{ $group: { _id: '$stage', count: { $sum: 1 } } }],
+                            revenue: [
+                                { $match: { stage: TransactionStage.COMPLETED } },
+                                {
+                                    $group: {
+                                        _id: null,
+                                        totalRevenue: { $sum: '$totalServiceFee' },
+                                        agencyRevenue: { $sum: '$commission.agencyAmount' },
+                                    },
+                                },
+                            ],
+                            topAgents: [
+                                { $match: { stage: TransactionStage.COMPLETED } },
+                                { $unwind: '$commission.agentShares' },
+                                {
+                                    $group: {
+                                        _id: '$commission.agentShares.agentId',
+                                        agentName: { $first: '$commission.agentShares.agentName' },
+                                        totalEarnings: { $sum: '$commission.agentShares.amount' },
+                                        transactionCount: { $sum: 1 },
+                                    },
+                                },
+                                { $sort: { totalEarnings: -1 } },
+                                { $limit: 5 },
+                                {
+                                    $project: {
+                                        _id: 0,
+                                        agentId: '$_id',
+                                        agentName: 1,
+                                        totalEarnings: 1,
+                                        transactionCount: 1,
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ])
+                .exec(),
             this.getRecentTransactions(),
-            this.getTopAgents(),
+            this.getAllTransactions(),
         ]);
 
+        const metrics = aggregationResult[0];
+
         return {
-            totalTransactions,
-            byStage,
-            totalRevenue: revenueData.totalRevenue,
-            agencyRevenue: revenueData.agencyRevenue,
+            totalTransactions: metrics.totalCount[0]?.count ?? 0,
+            byStage: this.formatByStage(metrics.byStage),
+            totalRevenue: metrics.revenue[0]?.totalRevenue ?? 0,
+            agencyRevenue: metrics.revenue[0]?.agencyRevenue ?? 0,
             recentTransactions,
-            topAgents,
+            allTransactions,
+            topAgents: metrics.topAgents,
         };
     }
 
-    private async getTotalTransactions(): Promise<number> {
-        return this.transactionModel.countDocuments().exec();
-    }
-
-    private async getByStage(): Promise<Record<string, number>> {
+    private formatByStage(
+        rawStages: { _id: string; count: number }[],
+    ): Record<string, number> {
         const stages = Object.values(TransactionStage);
-        const counts = await Promise.all(
-            stages.map(async (stage) => ({
-                stage,
-                count: await this.transactionModel.countDocuments({ stage }).exec(),
-            })),
-        );
-
-        return counts.reduce(
-            (acc, { stage, count }) => {
-                acc[stage] = count;
+        return stages.reduce(
+            (acc, stage) => {
+                const found = rawStages.find((r) => r._id === stage);
+                acc[stage] = found?.count ?? 0;
                 return acc;
             },
             {} as Record<string, number>,
         );
     }
 
-    private async getRevenueData(): Promise<{
-        totalRevenue: number;
-        agencyRevenue: number;
-    }> {
-        const result = await this.transactionModel
-            .aggregate([
-                { $match: { stage: TransactionStage.COMPLETED } },
-                {
-                    $group: {
-                        _id: null,
-                        totalRevenue: { $sum: '$totalServiceFee' },
-                        agencyRevenue: { $sum: '$commission.agencyAmount' },
-                    },
-                },
-            ])
-            .exec();
-
-        return {
-            totalRevenue: result[0]?.totalRevenue ?? 0,
-            agencyRevenue: result[0]?.agencyRevenue ?? 0,
-        };
-    }
-
     private async getRecentTransactions(): Promise<TransactionDocument[]> {
         return this.transactionModel
             .find()
-            .populate('listingAgentId', 'fullName email')
-            .populate('sellingAgentId', 'fullName email')
+            .populate('listingAgent', 'fullName email')
+            .populate('sellingAgent', 'fullName email')
             .sort({ createdAt: -1 })
             .limit(5)
             .exec();
     }
 
-    private async getTopAgents(): Promise<TopAgentResult[]> {
+    private async getAllTransactions(): Promise<TransactionDocument[]> {
         return this.transactionModel
-            .aggregate([
-                { $match: { stage: TransactionStage.COMPLETED } },
-                { $unwind: '$commission.agentShares' },
-                {
-                    $group: {
-                        _id: '$commission.agentShares.agentId',
-                        agentName: { $first: '$commission.agentShares.agentName' },
-                        totalEarnings: { $sum: '$commission.agentShares.amount' },
-                        transactionCount: { $sum: 1 },
-                    },
-                },
-                { $sort: { totalEarnings: -1 } },
-                { $limit: 5 },
-                {
-                    $project: {
-                        _id: 0,
-                        agentId: '$_id',
-                        agentName: 1,
-                        totalEarnings: 1,
-                        transactionCount: 1,
-                    },
-                },
-            ])
+            .find()
+            .populate('listingAgent', 'fullName email')
+            .populate('sellingAgent', 'fullName email')
+            .sort({ createdAt: -1 })
             .exec();
     }
 }
-
