@@ -1,40 +1,5 @@
 import { defineStore } from 'pinia';
-
-interface AgentShare {
-  agentId: string;
-  agentName: string;
-  role: 'listing' | 'selling' | 'both';
-  amount: number;
-  percentage: number;
-}
-
-interface Commission {
-  totalPool: number;
-  agencyAmount: number;
-  agencyPercentage: number;
-  agentShares: AgentShare[];
-  calculatedAt: string;
-}
-
-interface Agent {
-  _id: string;
-  fullName: string;
-  email: string;
-}
-
-interface Transaction {
-  _id: string;
-  propertyAddress: string;
-  propertyType: 'sale' | 'rental';
-  totalServiceFee: number;
-  stage: string;
-  listingAgentId: Agent;
-  sellingAgentId: Agent;
-  commission: Commission | null;
-  stageHistory: { from: string; to: string; changedAt: string }[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Transaction } from '~/types';
 
 interface CreateTransactionPayload {
   propertyAddress: string;
@@ -57,15 +22,13 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const config = useRuntimeConfig();
         const query = stage ? `?stage=${stage}` : '';
-        const data = await $fetch<Transaction[]>(
-          `/api/transactions${query}`,
-          { baseURL: config.public.apiBase as string },
-        );
+        const data = await useApiFetch<Transaction[]>(`/api/transactions${query}`);
         this.transactions = data;
+        return data;
       } catch (err: any) {
         this.error = err?.data?.message || 'Failed to fetch transactions';
+        throw err;
       } finally {
         this.loading = false;
       }
@@ -75,14 +38,12 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const config = useRuntimeConfig();
-        const data = await $fetch<Transaction>(
-          `/api/transactions/${id}`,
-          { baseURL: config.public.apiBase as string },
-        );
+        const data = await useApiFetch<Transaction>(`/api/transactions/${id}`);
         this.currentTransaction = data;
+        return data;
       } catch (err: any) {
         this.error = err?.data?.message || 'Failed to fetch transaction';
+        throw err;
       } finally {
         this.loading = false;
       }
@@ -92,15 +53,10 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const config = useRuntimeConfig();
-        const data = await $fetch<Transaction>(
-          '/api/transactions',
-          {
-            baseURL: config.public.apiBase as string,
-            method: 'POST',
-            body: payload,
-          },
-        );
+        const data = await useApiFetch<Transaction>('/api/transactions', {
+          method: 'POST',
+          body: payload,
+        });
         this.transactions.unshift(data);
         return data;
       } catch (err: any) {
@@ -115,15 +71,10 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const config = useRuntimeConfig();
-        const data = await $fetch<Transaction>(
-          `/api/transactions/${id}/transition`,
-          {
-            baseURL: config.public.apiBase as string,
-            method: 'PATCH',
-            body: { targetStage },
-          },
-        );
+        const data = await useApiFetch<Transaction>(`/api/transactions/${id}/transition`, {
+          method: 'PATCH',
+          body: { targetStage },
+        });
         this.currentTransaction = data;
         const idx = this.transactions.findIndex(t => t._id === id);
         if (idx !== -1) this.transactions[idx] = data;
