@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   body {
@@ -20,10 +20,7 @@
   }
 
   .input-field {
-    @apply w-full px-3 py-2 rounded-lg border border-surface-300
-           bg-white text-surface-900 placeholder-surface-400
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
-           transition-colors duration-200;
+    @apply w-full px-3 py-2 rounded-lg border border-surface-300 bg-white text-surface-900 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200;
   }
 
   .label {

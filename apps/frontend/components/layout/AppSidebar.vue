@@ -9,8 +9,12 @@
           S
         </div>
         <div>
-          <h1 class="text-lg font-bold text-surface-900 leading-tight">Signature Realty</h1>
-          <p class="text-xs text-surface-500">Senior Consultant</p>
+          <h1 class="text-lg font-bold text-surface-900 leading-tight">
+            {{ userStore.currentUser?.fullName || 'Signature Realty' }}
+          </h1>
+          <p class="text-xs text-surface-500">
+            {{ userStore.currentUser?.role === 'admin' ? 'System Administrator' : 'Senior Consultant' }}
+          </p>
         </div>
       </div>
     </div>
@@ -35,8 +39,8 @@
       </NuxtLink>
     </nav>
 
-    <!-- New Transaction Button -->
-    <div class="p-4 border-t border-surface-200">
+    <!-- Logout & New Transaction -->
+    <div class="p-4 border-t border-surface-200 space-y-2">
       <NuxtLink 
         to="/transactions/new" 
         class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-surface-900 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-surface-800 transition-colors"
@@ -46,12 +50,25 @@
         </svg>
         New Transaction
       </NuxtLink>
+      
+      <button 
+        @click="handleLogout"
+        class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white text-danger-600 text-sm font-bold rounded-lg border border-danger-100 hover:bg-danger-50 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        Logout
+      </button>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { useUserStore } from '~/stores/user';
+
 const route = useRoute();
+const userStore = useUserStore();
 
 const isSidebarOpen = useState('sidebarOpen');
 
@@ -63,5 +80,9 @@ const menuItems = [
 function isActive(path: string) {
   if (path === '/') return route.path === '/';
   return route.path.startsWith(path);
+}
+
+function handleLogout() {
+  userStore.logout();
 }
 </script>
