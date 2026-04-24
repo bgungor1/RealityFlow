@@ -32,7 +32,7 @@
         </div>
       </div>
       <div>
-        <div class="text-3xl font-bold text-surface-900">{{ data?.byStage?.completed || 0 }}</div>
+        <div class="text-3xl font-bold text-surface-900">{{ data?.byStage?.[TransactionStage.COMPLETED] || 0 }}</div>
         <div class="mt-2 text-sm text-surface-500">
           Total recorded in the system
         </div>
@@ -50,7 +50,7 @@
         </div>
       </div>
       <div>
-        <div class="text-3xl font-bold text-surface-900">{{ data?.byStage?.title_deed || 0 }}</div>
+        <div class="text-3xl font-bold text-surface-900">{{ data?.byStage?.[TransactionStage.TITLE_DEED] || 0 }}</div>
         <div class="mt-2 flex items-center text-sm">
           <svg class="w-4 h-4 text-danger-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -61,8 +61,9 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
+import { TransactionStage } from '~/constants/transaction';
+
 defineProps<{
   data: any;
 }>();

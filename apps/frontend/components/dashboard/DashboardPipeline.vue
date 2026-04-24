@@ -68,11 +68,11 @@
             <div class="space-y-2 text-xs text-surface-600">
               <div class="flex justify-between">
                 <span>Listing:</span>
-                <span class="font-medium text-surface-900">{{ trx.listingAgentId?.fullName || 'Unknown' }}</span>
+                <span class="font-medium text-surface-900">{{ trx.listingAgent?.fullName || 'Unknown' }}</span>
               </div>
               <div class="flex justify-between">
                 <span>Selling:</span>
-                <span class="font-medium text-surface-900">{{ trx.sellingAgentId?.fullName || 'Unknown' }}</span>
+                <span class="font-medium text-surface-900">{{ trx.sellingAgent?.fullName || 'Unknown' }}</span>
               </div>
             </div>
           </NuxtLink>
@@ -90,27 +90,27 @@
 <script setup lang="ts">
 import { useTransactionStore } from '~/stores/transaction';
 import { useDashboardStore } from '~/stores/dashboard';
+import { TransactionStage, STAGE_ORDER } from '~/constants/transaction';
+import type { Transaction } from '~/types';
 
 const props = defineProps<{
-  transactions: any[];
+  transactions: Transaction[];
 }>();
 
 const transactionStore = useTransactionStore();
 const dashboardStore = useDashboardStore();
 
 const columns = [
-  { id: 'agreement', title: 'Agreement' },
-  { id: 'earnest_money', title: 'Earnest Money' },
-  { id: 'title_deed', title: 'Title Deed' },
-  { id: 'completed', title: 'Completed' },
+  { id: TransactionStage.AGREEMENT, title: 'Agreement' },
+  { id: TransactionStage.EARNEST_MONEY, title: 'Earnest Money' },
+  { id: TransactionStage.TITLE_DEED, title: 'Title Deed' },
+  { id: TransactionStage.COMPLETED, title: 'Completed' },
 ];
 
-const STAGES = ['agreement', 'earnest_money', 'title_deed', 'completed'];
-
-const moveToNextStage = async (trx: any) => {
-  const currentIndex = STAGES.indexOf(trx.stage);
-  if (currentIndex < STAGES.length - 1) {
-    const nextStage = STAGES[currentIndex + 1];
+const moveToNextStage = async (trx: Transaction) => {
+  const currentIndex = STAGE_ORDER.indexOf(trx.stage as TransactionStage);
+  if (currentIndex < STAGE_ORDER.length - 1) {
+    const nextStage = STAGE_ORDER[currentIndex + 1];
     await transactionStore.transitionStage(trx._id, nextStage);
     // Refresh dashboard to recalculate totals
     await dashboardStore.fetchDashboard();
@@ -119,14 +119,6 @@ const moveToNextStage = async (trx: any) => {
 
 const getTransactionsByStage = (stageId: string) => {
   return props.transactions?.filter(t => t.stage === stageId) || [];
-};
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
 };
 
 const getBadgeColor = (type: string) => {
