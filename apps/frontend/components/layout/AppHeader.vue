@@ -44,9 +44,11 @@
 
         <div class="flex items-center gap-3 pl-6 border-l border-surface-200">
           <div class="w-9 h-9 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center font-bold text-sm">
-            JS
+            {{ userInitials }}
           </div>
-          <span class="hidden sm:inline font-semibold text-surface-700 text-sm">Profile</span>
+          <span class="hidden sm:inline font-semibold text-surface-700 text-sm">
+            {{ userStore.currentUser?.fullName?.split(' ')[0] || 'Profile' }}
+          </span>
         </div>
       </div>
       
@@ -55,5 +57,13 @@
 </template>
 
 <script setup lang="ts">
+import { useUserStore } from '~/stores/user';
+
 const isSidebarOpen = useState('sidebarOpen');
+const userStore = useUserStore();
+
+const userInitials = computed(() => {
+  const name = userStore.currentUser?.fullName || 'John Doe';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase();
+});
 </script>
