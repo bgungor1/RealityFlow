@@ -1,24 +1,9 @@
 import { defineStore } from 'pinia';
-
-interface TopAgent {
-  agentId: string;
-  agentName: string;
-  totalEarnings: number;
-  transactionCount: number;
-}
-
-interface DashboardData {
-  totalTransactions: number;
-  byStage: Record<string, number>;
-  totalRevenue: number;
-  agencyRevenue: number;
-  recentTransactions: any[];
-  topAgents: TopAgent[];
-}
+import type { DashboardMetrics } from '~/types';
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
-    data: null as DashboardData | null,
+    data: null as DashboardMetrics | null,
     loading: false,
     error: null as string | null,
   }),
@@ -28,14 +13,12 @@ export const useDashboardStore = defineStore('dashboard', {
       this.loading = true;
       this.error = null;
       try {
-        const config = useRuntimeConfig();
-        const result = await $fetch<DashboardData>(
-          '/api/dashboard',
-          { baseURL: config.public.apiBase as string },
-        );
+        const result = await useApiFetch<DashboardMetrics>('/api/dashboard');
         this.data = result;
+        return result; // Restore for SSR
       } catch (err: any) {
         this.error = err?.data?.message || 'Failed to fetch dashboard data';
+        throw err; // Restore for SSR
       } finally {
         this.loading = false;
       }
