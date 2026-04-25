@@ -8,7 +8,11 @@ async function bootstrap() {
 
   // CORS — frontend (Nuxt 3) ile iletişim için
   app.enableCors({
-    origin: true, // TODO: Vercel URL alındığında burayı spesifik domain ile değiştirin
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://reality-flow-six.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
