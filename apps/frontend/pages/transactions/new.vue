@@ -160,7 +160,7 @@ const form = reactive({
 // Fetch agents on mount
 onMounted(async () => {
   try {
-    const data = await $fetch<any[]>('/api/users', {
+    const data = await $fetch<any[]>('/users', {
       baseURL: config.public.apiBase as string,
     });
     // Filter out admins if necessary, but for now just use all users since case said 2 roles
