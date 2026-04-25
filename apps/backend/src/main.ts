@@ -25,6 +25,9 @@ async function bootstrap() {
   // Global exception filter — hata mesajları düzgün formatlanır
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api');
+
   // Swagger Configuration
   const { SwaggerModule, DocumentBuilder } = await import('@nestjs/swagger');
   const config = new DocumentBuilder()

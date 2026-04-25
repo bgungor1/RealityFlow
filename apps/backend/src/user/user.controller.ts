@@ -15,7 +15,7 @@ import { ParseMongoIdPipe } from '../common/pipes/parse-mongo-id.pipe.js';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('users')
-@Controller('api/users')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
