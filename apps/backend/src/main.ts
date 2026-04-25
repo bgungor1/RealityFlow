@@ -8,12 +8,7 @@ async function bootstrap() {
 
   // CORS — frontend (Nuxt 3) ile iletişim için
   app.enableCors({
-    origin: [
-      'http://localhost:3001',
-      'http://127.0.0.1:3001',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-    ],
+    origin: true, // TODO: Vercel URL alındığında burayı spesifik domain ile değiştirin
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
