@@ -20,7 +20,7 @@ export const useUserStore = defineStore('user', {
       this.loading = true;
       this.error = null;
       try {
-        const data = await useApiFetch<Agent[]>('/api/users');
+        const data = await useApiFetch<Agent[]>('/users');
         this.users = data;
         return data; // SSR serialization fix
       } catch (err: any) {

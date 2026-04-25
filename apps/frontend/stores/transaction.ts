@@ -23,7 +23,7 @@ export const useTransactionStore = defineStore('transaction', {
       this.error = null;
       try {
         const query = stage ? `?stage=${stage}` : '';
-        const data = await useApiFetch<Transaction[]>(`/api/transactions${query}`);
+        const data = await useApiFetch<Transaction[]>(`/transactions${query}`);
         this.transactions = data;
         return data;
       } catch (err: any) {
@@ -38,7 +38,7 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const data = await useApiFetch<Transaction>(`/api/transactions/${id}`);
+        const data = await useApiFetch<Transaction>(`/transactions/${id}`);
         this.currentTransaction = data;
         return data;
       } catch (err: any) {
@@ -53,7 +53,7 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const data = await useApiFetch<Transaction>('/api/transactions', {
+        const data = await useApiFetch<Transaction>('/transactions', {
           method: 'POST',
           body: payload,
         });
@@ -71,7 +71,7 @@ export const useTransactionStore = defineStore('transaction', {
       this.loading = true;
       this.error = null;
       try {
-        const data = await useApiFetch<Transaction>(`/api/transactions/${id}/transition`, {
+        const data = await useApiFetch<Transaction>(`/transactions/${id}/transition`, {
           method: 'PATCH',
           body: { targetStage },
         });

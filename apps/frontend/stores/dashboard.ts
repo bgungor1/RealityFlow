@@ -13,7 +13,7 @@ export const useDashboardStore = defineStore('dashboard', {
       this.loading = true;
       this.error = null;
       try {
-        const result = await useApiFetch<DashboardMetrics>('/api/dashboard');
+        const result = await useApiFetch<DashboardMetrics>('/dashboard');
         this.data = result;
         return result; // Restore for SSR
       } catch (err: any) {
